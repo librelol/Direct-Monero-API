@@ -1,0 +1,18 @@
+services:
+  web:
+    build: web
+    ports: 
+      - "5000:5000"
+    networks: 
+      - frontend
+    depends_on:
+      - api
+  api:
+    build: api
+    ports: 
+      - "8000:8000"
+    networks:
+      - frontend
+
+networks:
+  frontend:
