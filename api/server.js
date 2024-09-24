@@ -129,8 +129,17 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Endpoint to retrieve the current logged-in user's username
-app.get('/api/me', authenticateToken, (req, res) => {
-  res.json({ username: req.user.username });
+app.get('/api/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ username: user.username }); // Send back the username
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // Start the server

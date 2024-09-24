@@ -1,14 +1,4 @@
 services:
-  web:
-    build: web
-    ports: 
-      - "5000:5000"
-    networks: 
-      - frontend
-    depends_on:
-      - api
-      - mongodb
-
   api:
     build: api
     ports: 
