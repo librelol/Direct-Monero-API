@@ -7,12 +7,37 @@ services:
       - frontend
     depends_on:
       - api
+      - mongodb
+
   api:
     build: api
     ports: 
       - "8000:8000"
     networks:
       - frontend
+      - backend
+    depends_on:
+      - mongodb
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+    volumes:
+      - mongo-data:/data/db
+      - ./mongod.conf:/etc/mongod.conf  # Mount the custom configuration file
+    command: mongod --config /etc/mongod.conf  # Use the custom configuration file
 
 networks:
   frontend:
+  backend:
+
+volumes:
+  mongo-data:
