@@ -76,6 +76,7 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  displayName: { type: String, required: false },
   public_key: { type: String, required: false }
 });
 
@@ -133,6 +134,32 @@ app.post('/api/public_key', authenticateToken, async (req, res) => {
   }
 });
 
+// New endpoint to change the display name
+app.post('/api/change_display_name', authenticateToken, async (req, res) => {
+  const { displayName } = req.body;
+
+  // Validate the display name format
+  if (!displayName || typeof displayName !== 'string' || displayName.length > 50) {
+    return res.status(400).json({ message: 'Invalid display name format' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.displayName = displayName; // Update the user's display name
+    await user.save(); // Save changes to the database
+
+    res.json({ message: 'Display name updated successfully' });
+  } catch (error) {
+    console.error('Error updating display name:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
@@ -158,23 +185,25 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Endpoint to retrieve the current logged-in user's username and public key
+// Endpoint to retrieve the current logged-in user's username, public key, and display name
 app.get('/api/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id); // Fetch user by ID
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    // Send back the username and public key
+    // Send back the username, public key, and display name
     res.json({ 
       username: user.username, 
-      public_key: user.public_key || null // Return public_key, default to null if not set
+      public_key: user.public_key || null, // Return public_key, default to null if not set
+      displayName: user.displayName || null // Return displayName, default to null if not set
     });
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 // New endpoint to change the password
