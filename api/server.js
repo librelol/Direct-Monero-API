@@ -76,6 +76,8 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  profile_image: { type: String, required: false },
+  last_seen: { type: Date, default: Date.now },
   displayName: { type: String, required: false },
   public_key: { type: String, required: false }
 });
@@ -103,6 +105,30 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Endpoint to update user's profile image
+app.post('/api/upload_profile_image', authenticateToken, async (req, res) => {
+  const { profileImage } = req.body; // Expect a Base64 string
+
+  if (!profileImage) {
+    return res.status(400).json({ message: 'No image provided' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.profileImage = profileImage; // Update the user's profile image
+    await user.save(); // Save changes to the database
+
+    res.json({ message: 'Profile image updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
