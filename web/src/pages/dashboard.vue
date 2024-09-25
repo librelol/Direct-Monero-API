@@ -1,34 +1,22 @@
 <template>
     <v-app>
-      <v-navigation-drawer app permanent>
-        <v-list>
-          <v-list-item v-for="item in menuItems" :key="item.title" @click="navigateTo(item.route)">
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-navigation-drawer>
-  
-      <v-app-bar app>
-        <v-toolbar-title>My Dashboard</v-toolbar-title>
-      </v-app-bar>
-  
-      <v-container>
-        <v-row>
-          <v-col>
-            <v-card>
-              <v-card-title>
-                <span class="headline">Welcome, {{ username }}</span>
-              </v-card-title>
-              <v-card-text>
-                <p>This is your dashboard.</p>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn color="red" @click="logout">Logout</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
+
+      <v-content>
+        <v-container>
+          <v-row>
+            <v-col>
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Welcome, {{ username }}</span>
+                </v-card-title>
+                <v-card-text>
+                  <p>This is your dashboard.</p>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-content>
     </v-app>
   </template>
   
@@ -37,11 +25,6 @@
     data() {
       return {
         username: '', // To hold the logged-in user's username
-        menuItems: [
-          { title: 'Dashboard', route: '/' },
-          { title: 'Profile', route: '/profile' },
-          { title: 'Settings', route: '/settings' },
-        ],
       };
     },
     mounted() {
@@ -69,14 +52,6 @@
           console.error('Error fetching username:', error);
           this.username = 'Guest'; // Fallback if there's an error
         }
-      },
-      async logout() {
-        localStorage.removeItem('token'); // Clear the token
-        this.username = ''; // Reset the username
-        this.$router.push('/login'); // Redirect to login page
-      },
-      navigateTo(route) {
-        this.$router.push(route); // Navigate to the selected route
       },
     },
   };

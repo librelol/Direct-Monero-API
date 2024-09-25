@@ -75,7 +75,8 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // User schema and model
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  public_key: { type: String, required: false }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -104,6 +105,35 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// New endpoint to set the public key
+app.post('/api/public_key', authenticateToken, async (req, res) => {
+  const { public_key } = req.body;
+
+  // Validate the public key format
+  const pgpPublicKeyRegex = /^-----BEGIN PGP PUBLIC KEY BLOCK-----\n([\s\S]+?)\n-----END PGP PUBLIC KEY BLOCK-----\n$/;
+
+  // Check if the public_key is a string and matches the PGP public key format
+  if (!public_key || typeof public_key !== 'string' || !pgpPublicKeyRegex.test(public_key)) {
+    return res.status(400).json({ message: 'Invalid public key format' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.public_key = public_key; // Update the user's public key
+    await user.save(); // Save changes to the database
+
+    res.json({ message: 'Public key updated successfully' });
+  } catch (error) {
+    console.error('Error updating public key:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
@@ -128,16 +158,53 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Endpoint to retrieve the current logged-in user's username
+// Endpoint to retrieve the current logged-in user's username and public key
 app.get('/api/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id); // Fetch user by ID
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ username: user.username }); // Send back the username
+    // Send back the username and public key
+    res.json({ 
+      username: user.username, 
+      public_key: user.public_key || null // Return public_key, default to null if not set
+    });
   } catch (error) {
     console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// New endpoint to change the password
+app.post('/api/change_password', authenticateToken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  // Validate the new password
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the old password is correct
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Old password is incorrect' });
+    }
+
+    // Hash the new password and save it
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
