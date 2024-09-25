@@ -4,8 +4,11 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const Grid = require('gridfs-stream');
 const mongoose = require('mongoose');
+const multer = require('multer');
 const validator = require('validator'); // Import validator
+const crypto = require('crypto'); // Import crypto for unique file names
 require('dotenv').config();
 
 const app = express();
@@ -55,7 +58,6 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-
 // Middleware
 app.use(cors()); // Enable CORS
 app.use(bodyParser.json());
@@ -69,14 +71,23 @@ const dbHost = 'mongodb'; // The service name defined in docker-compose.yml
 const mongoURI = `mongodb://${dbUser}:${dbPassword}@${dbHost}:27017/${dbName}?authSource=admin`;
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
+  .then(() => {
+    console.log('MongoDB connected');
+    
+    // Initialize GridFS
+    const conn = mongoose.createConnection(mongoURI);
+    conn.once('open', () => {
+      gfs = Grid(conn.db, mongoose.mongo);
+      gfs.collection('uploads'); // Set the collection name for GridFS
+    });
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // User schema and model
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profile_image: { type: String, required: false },
+  profileImageId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProfileImage', required: false }, // Use ObjectId to store profile image ID
   last_seen: { type: Date, default: Date.now },
   displayName: { type: String, required: false },
   public_key: { type: String, required: false }
@@ -87,7 +98,7 @@ const User = mongoose.model('User', userSchema);
 // Login endpoint
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  
+
   // Sanitize inputs
   const sanitizedUsername = validator.escape(username);
   const sanitizedPassword = validator.escape(password);
@@ -108,28 +119,64 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Endpoint to update user's profile image
-app.post('/api/upload_profile_image', authenticateToken, async (req, res) => {
-  const { profileImage } = req.body; // Expect a Base64 string
+// Set up Multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-  if (!profileImage) {
-    return res.status(400).json({ message: 'No image provided' });
+// Endpoint to upload a profile image
+app.post('/api/upload_profile_image', upload.single('file'), authenticateToken, (req, res) => {
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ message: 'No file provided' });
   }
 
-  try {
-    const user = await User.findById(req.user.id); // Fetch user by ID
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+  // Create a unique filename
+  const filename = crypto.randomBytes(16).toString('hex') + '-' + file.originalname;
+
+  // Create the file to be stored in GridFS
+  const writestream = gfs.createWriteStream({
+    filename: filename,
+    content_type: file.mimetype,
+  });
+
+  writestream.on('close', async (file) => {
+    try {
+      const user = await User.findById(req.user.id); // Fetch user by ID
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      user.profileImageId = file._id; // Update user's profile image ID
+      await user.save(); // Save changes to the user
+
+      res.json({ message: 'Profile image uploaded successfully', file });
+    } catch (error) {
+      console.error('Error saving user profile image:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  writestream.write(file.buffer);
+  writestream.end();
+});
+
+// Endpoint to retrieve a profile image
+app.get('/api/profile_image/:id', (req, res) => {
+  gfs.files.findOne({ _id: req.params.id }, (err, file) => {
+    if (!file || file.length === 0) {
+      return res.status(404).json({ message: 'File not found' });
     }
 
-    user.profileImage = profileImage; // Update the user's profile image
-    await user.save(); // Save changes to the database
-
-    res.json({ message: 'Profile image updated successfully' });
-  } catch (error) {
-    console.error('Error updating profile image:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+    // Check if the file is an image
+    if (file.contentType === 'image/jpeg' || file.contentType === 'image/png') {
+      // Create a read stream to send the file
+      const readstream = gfs.createReadStream(file.filename);
+      readstream.pipe(res);
+    } else {
+      res.status(404).json({ message: 'Not an image' });
+    }
+  });
 });
 
 // New endpoint to set the public key
@@ -185,8 +232,6 @@ app.post('/api/change_display_name', authenticateToken, async (req, res) => {
   }
 });
 
-
-
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
@@ -214,7 +259,7 @@ app.post('/api/register', async (req, res) => {
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
 app.get('/api/me', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id); // Fetch user by ID
+    const user = await User.findById(req.user.id).populate('profileImageId'); // Fetch user by ID and populate profile image ID
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -222,15 +267,14 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     res.json({ 
       username: user.username, 
       public_key: user.public_key || null, // Return public_key, default to null if not set
-      displayName: user.displayName || null // Return displayName, default to null if not set
+      displayName: user.displayName || null, // Return displayName, default to null if not set
+      profileImageId: user.profileImageId // Return profile image ID
     });
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
-
 
 // New endpoint to change the password
 app.post('/api/change_password', authenticateToken, async (req, res) => {
