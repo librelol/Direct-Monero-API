@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const validator = require('validator'); // Import validator
 const crypto = require('crypto'); // Import crypto for unique file names
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -57,6 +58,16 @@ const authenticateToken = (req, res, next) => {
     res.status(400).json({ message: 'Invalid token' });
   }
 };
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
 
 // Middleware
 app.use(cors()); // Enable CORS
