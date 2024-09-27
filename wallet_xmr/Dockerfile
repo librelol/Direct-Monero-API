@@ -1,23 +1,15 @@
-# Use the official Ubuntu base image
-FROM debian:rolling
+# Use the official Alpine base image
+FROM alpine:latest
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-
-COPY . .
-
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y \
+# Install dependencies and Monero
+RUN apk update && \
+    apk add --no-cache \
     wget \
-    gnupg2 \
-    software-properties-common
-
-# Add the Monero repository and install Monero
-RUN wget -qO - https://downloads.getmonero.org/monero.asc | gpg --dearmor -o /usr/share/keyrings/monero-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/monero-archive-keyring.gpg] https://downloads.getmonero.org/repo/ubuntu focal main" | tee /etc/apt/sources.list.d/monero.list && \
-    apt-get update && \
-    apt-get install -y monero
+    gnupg \
+    bash && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache monero
 
 # Expose the default Monero wallet RPC port
 EXPOSE 18082
