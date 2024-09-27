@@ -265,7 +265,6 @@ app.get('/api/me', authenticateToken, async (req, res) => {
     }
     // Send back the username, public key, and display name
     res.json({ 
-      username: user.username, 
       public_key: user.public_key || null, // Return public_key, default to null if not set
       displayName: user.displayName || null, // Return displayName, default to null if not set
       profileImageId: user.profileImageId // Return profile image ID
