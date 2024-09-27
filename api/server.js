@@ -13,7 +13,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-const SECRET_KEY = process.env.SECRET_KEY || 'this_is_backup'; // Use environment variable in production
+const SECRET_KEY = process.env.SECRET_KEY || crypto.randomBytes(64).toString('hex'); // Use environment variable in production or generate a random key
 
 // Static list of administrator usernames
 const adminUsernames = ['admin'];
