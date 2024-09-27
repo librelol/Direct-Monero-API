@@ -1,5 +1,5 @@
 # Use the official Ubuntu base image
-FROM ubuntu:20.04
+FROM debian:rolling
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
