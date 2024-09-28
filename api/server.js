@@ -247,6 +247,18 @@ app.post('/api/change_display_name', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: 'Invalid display name format' });
   }
 
+  // Check if the display name contains at least 4 numbers
+  const numberCount = (displayName.match(/\d/g) || []).length;
+  if (numberCount < 4) {
+    return res.status(400).json({ message: 'Display name must contain at least 4 numbers' });
+  }
+
+  // Check if the display name contains more than 2 letters
+  const letterCount = (displayName.match(/[a-zA-Z]/g) || []).length;
+  if (letterCount < 2) {
+    return res.status(400).json({ message: 'Display name must contain more than 2 letters' });
+  }
+
   try {
     const user = await User.findById(req.user.id); // Fetch user by ID
     if (!user) {

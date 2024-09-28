@@ -39,6 +39,7 @@ const displayNameRules = [
     v => !!v || 'Display name is required',
     v => (v && v.length <= 50) || 'Display name must be less than 50 characters',
     v => (v && (v.match(/\d/g) || []).length >= 4) || 'Display name must contain at least 4 numbers',
+    v => (v && (v.match(/[a-zA-Z]/g) || []).length >= 2) || 'Display name must contain more than 2 letters',
 ];
 
 const changeDisplayName = async () => {
