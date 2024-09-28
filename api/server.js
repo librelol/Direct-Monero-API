@@ -10,7 +10,10 @@ const multer = require('multer');
 const validator = require('validator'); // Import validator
 const crypto = require('crypto'); // Import crypto for unique file names
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet'); // Import helmet for security
+
 require('dotenv').config();
+
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -18,6 +21,7 @@ const SECRET_KEY = process.env.SECRET_KEY || crypto.randomBytes(64).toString('he
 
 // Static list of administrator usernames
 const adminUsernames = ['admin'];
+app.use(helmet());
 
 // Middleware to check if a user is an administrator
 function isAdmin(req, res, next) {
@@ -137,11 +141,13 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 });
 
-// Set up Multer for file uploads
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+});
 
-// Endpoint to upload a profile image
 app.post('/api/upload_profile_image', upload.single('file'), authenticateToken, (req, res) => {
   const file = req.file;
 
@@ -149,10 +155,13 @@ app.post('/api/upload_profile_image', upload.single('file'), authenticateToken, 
     return res.status(400).json({ message: 'No file provided' });
   }
 
-  // Create a unique filename
-  const filename = crypto.randomBytes(16).toString('hex') + '-' + file.originalname;
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return res.status(400).json({ message: 'Invalid file type' });
+  }
 
-  // Create the file to be stored in GridFS
+  const sanitize = require('sanitize-filename');
+  const filename = crypto.randomBytes(16).toString('hex') + '-' + sanitize(file.originalname);
+
   const writestream = gfs.createWriteStream({
     filename: filename,
     content_type: file.mimetype,
@@ -167,12 +176,14 @@ app.post('/api/upload_profile_image', upload.single('file'), authenticateToken, 
 
       user.profileImageId = file._id; // Update user's profile image ID
       await user.save(); // Save changes to the user
-
-      res.json({ message: 'Profile image uploaded successfully', file });
+      res.status(200).json({ message: 'Profile image uploaded successfully' });
     } catch (error) {
-      console.error('Error saving user profile image:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
+  });
+
+  writestream.on('error', (err) => {
+    res.status(500).json({ message: 'Error uploading file', error: err.message });
   });
 
   writestream.write(file.buffer);
