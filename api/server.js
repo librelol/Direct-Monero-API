@@ -12,6 +12,7 @@ const crypto = require('crypto'); // Import crypto for unique file names
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet'); // Import helmet for security
 
+
 require('dotenv').config();
 
 
@@ -125,18 +126,19 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   const sanitizedUsername = validator.escape(username);
   const sanitizedPassword = validator.escape(password);
 
-  console.log('Received request:', { username: sanitizedUsername });
-
   try {
     const user = await User.findOne({ username: sanitizedUsername });
     if (user && await bcrypt.compare(sanitizedPassword, user.password)) {
+      // Update last_seen field
+      user.last_seen = Date.now();
+      await user.save();
+
       const token = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: '1h' });
       return res.json({ token });
     } else {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -261,24 +263,44 @@ app.post('/api/change_display_name', authenticateToken, async (req, res) => {
   }
 });
 
-// Registration endpoint
+// Function to generate a random display name
+const generateRandomDisplayName = () => {
+  const adjectives = ['Brave', 'Clever', 'Witty', 'Bold', 'Swift'];
+  const nouns = ['Lion', 'Eagle', 'Shark', 'Panther', 'Wolf'];
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  return `${adjective}${noun}${crypto.randomBytes(2).toString('hex')}`;
+};
+
+// User registration endpoint
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
 
-  // Sanitize inputs
-  const sanitizedUsername = validator.escape(username);
-  const sanitizedPassword = validator.escape(password);
-
-  // Check for validation errors
-  if (!validator.isAlphanumeric(sanitizedUsername) || sanitizedPassword.length < 6) {
-    return res.status(400).json({ message: 'Invalid input' });
+  // Validate the input
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username and password are required' });
   }
 
-  const hashedPassword = await bcrypt.hash(sanitizedPassword, 10); // Hash the password
-  const newUser = new User({ username: sanitizedUsername, password: hashedPassword });
-
   try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user with a random display name
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      displayName: generateRandomDisplayName(), // Assign random display name
+    });
+
+    // Save the user to the database
     await newUser.save();
+
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(400).json({ message: 'Error registering user: ' + error.message });

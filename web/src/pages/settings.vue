@@ -10,8 +10,8 @@
             <v-list>
               <v-list-item>
                 <v-list-item-content>
-                  <v-list-item-title>Username:</v-list-item-title>
-                  <v-list-item-subtitle>{{ username }}</v-list-item-subtitle>
+                  <v-list-item-title>DisplayName:</v-list-item-title>
+                  <v-list-item-subtitle>{{ displayName }}</v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
 
@@ -41,8 +41,12 @@
           <v-card-actions>
             <ChangePassword @passwordChanged="fetchUserProfile" />
           </v-card-actions>
-        </v-card>
 
+          <v-card-actions>
+            <ChangeDisplayName @displayNameChanged="fetchUserProfile" />
+          </v-card-actions>
+          
+        </v-card>
         <v-spacer></v-spacer>
       </v-col>
     </v-row>
@@ -54,7 +58,7 @@ import { ref, onMounted } from 'vue';
 import ChangePassword from '@/components/ChangePassword.vue';
 import PublicKey from '@/components/PublicKey.vue'; // Ensure PublicKey is imported
 
-const username = ref('');
+const displayName= ref('');
 const publicKey = ref('');
 const success = ref('');
 const error = ref('');
@@ -75,7 +79,7 @@ const fetchUserProfile = async () => {
     }
 
     const data = await response.json();
-    username.value = data.username;
+    displayName.value = data.displayName;
     publicKey.value = data.public_key || 'Not set';
     success.value = '';
     error.value = '';
