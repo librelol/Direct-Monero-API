@@ -28,17 +28,12 @@ services:
   wallet_xmr:
     build: wallet_xmr
     ports:
+      - "18081:18081"
       - "18082:18082"
     networks:
-      - frontend
       - backend
-    depends_on:
-      - mongodb
     environment:
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_HOST=mongodb
+      - WALLET_PASSWORD=password
 
 networks:
   frontend:
@@ -46,3 +41,4 @@ networks:
 
 volumes:
   mongo-data:
+  monero-data:
