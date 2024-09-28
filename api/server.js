@@ -111,11 +111,17 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Rate limiting middleware for login endpoint
+// Define specific rate limiters
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 login requests per windowMs
   message: 'Too many login attempts from this IP, please try again later'
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
 });
 
 // Login endpoint
@@ -142,6 +148,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+app.use('/api/', apiLimiter);
+
 
 const storage = multer.memoryStorage();
 const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -193,7 +202,7 @@ app.post('/api/upload_profile_image', upload.single('file'), authenticateToken, 
 });
 
 // Endpoint to retrieve a profile image
-app.get('/api/profile_image/:id', (req, res) => {
+app.get('/api/profile_image/:id', apiLimiter, (req, res) => {
   gfs.files.findOne({ _id: req.params.id }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({ message: 'File not found' });
@@ -286,7 +295,7 @@ const generateRandomDisplayName = () => {
 };
 
 // User registration endpoint
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', apiLimiter, async (req, res) => {
   const { username, password } = req.body;
 
   // Validate the input
@@ -321,7 +330,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
-app.get('/api/me', authenticateToken, async (req, res) => {
+app.get('/api/me', authenticateToken, apiLimiter, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate('profileImageId'); // Fetch user by ID and populate profile image ID
     if (!user) {
