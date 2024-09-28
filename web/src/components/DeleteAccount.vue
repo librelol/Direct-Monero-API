@@ -69,7 +69,7 @@
       });
   
       if (!response.ok) {
-        throw new Error('Failed to delete account');
+        throw new Error('Failed to delete account, make sure its your username not your display name');
       }
   
       const data = await response.json();
