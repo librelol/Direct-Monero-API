@@ -303,19 +303,23 @@ app.post('/api/register', apiLimiter, async (req, res) => {
     return res.status(400).json({ message: 'Username and password are required' });
   }
 
+  // Sanitize inputs
+  const sanitizedUsername = validator.escape(username);
+  const sanitizedPassword = validator.escape(password);
+
   try {
     // Check if the user already exists
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username: sanitizedUsername });
     if (existingUser) {
       return res.status(400).json({ message: 'Username already exists' });
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(sanitizedPassword, 10);
 
     // Create a new user with a random display name
     const newUser = new User({
-      username,
+      username: sanitizedUsername,
       password: hashedPassword,
       displayName: generateRandomDisplayName(), // Assign random display name
     });
