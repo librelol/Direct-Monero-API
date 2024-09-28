@@ -384,6 +384,24 @@ app.post('/api/change_password', authenticateToken, async (req, res) => {
   }
 });
 
+// Endpoint to delete the user's account
+app.post('/api/delete_account', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete the user from the database
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`API is running on port ${PORT}`);

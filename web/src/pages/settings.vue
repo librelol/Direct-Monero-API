@@ -45,6 +45,10 @@
           <v-card-actions>
             <ChangeDisplayName @displayNameChanged="fetchUserProfile" />
           </v-card-actions>
+
+          <v-card-actions>
+              <DeleteAccount @accountDeleted="handleAccountDeletion" />
+          </v-card-actions>
           
         </v-card>
         <v-spacer></v-spacer>
