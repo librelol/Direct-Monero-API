@@ -6,6 +6,9 @@
                     <v-card-title>
                         <span class="headline">Change Display Name</span>
                     </v-card-title>
+                    <v-card-subtitle>
+                        <span style="color: red; font-weight: bold;">Disclaimer: Use a generic name to protect your privacy</span>
+                    </v-card-subtitle>
                     <v-card-text>
                         <v-form ref="form" v-model="valid" lazy-validation>
                             <v-text-field
