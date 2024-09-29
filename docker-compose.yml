@@ -40,7 +40,8 @@ services:
   xmr_wallet:
     build: xmr_wallet
     ports:
-      - "8080:8080"
+      - "18081:18081"
+      - "18082:18082"
     networks:
       - backend
 networks:
