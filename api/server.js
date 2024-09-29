@@ -9,6 +9,7 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require('./routes/user');
+const postRoutes = require('./routes/post');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -26,6 +27,11 @@ app.use(apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/post', postRoutes);
+
+app.use('/api', (req, res) => {
+  res.json({ message: 'API is running' });
+});
 
 // Start the server
 app.listen(PORT, () => {

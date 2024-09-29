@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { post } = require('../routes/auth');
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
