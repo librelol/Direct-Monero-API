@@ -28,6 +28,14 @@ services:
       - ./mongod.conf:/etc/mongod.conf  # Mount the custom configuration file
     command: mongod --config /etc/mongod.conf  # Use the custom configuration file
 
+  web:
+    build: web
+    ports:
+      - "5000:5000"
+    networks:
+      - frontend
+    depends_on:
+      - api
 networks:
   frontend:
   backend:
