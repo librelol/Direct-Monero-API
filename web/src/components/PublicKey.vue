@@ -42,7 +42,7 @@
   const updatePublicKey = async () => {
     try {
       const token = localStorage.getItem('token'); // Retrieve token from local storage
-      const response = await fetch('http://localhost:8000/api/public_key', {
+      const response = await fetch('http://localhost:8000/api/profile/public_key', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`, // Attach token to request

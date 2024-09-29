@@ -76,7 +76,7 @@
   // Function to handle password change
   const changePassword = async () => {
     const token = localStorage.getItem('token'); // Retrieve token from local storage
-    const response = await fetch('http://localhost:8000/api/change_password', {
+    const response = await fetch('http://localhost:8000/api/user/change_password', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`, // Attach token to request

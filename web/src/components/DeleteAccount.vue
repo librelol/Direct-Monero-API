@@ -59,7 +59,7 @@
   const deleteAccount = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:8000/api/delete_account', {
+      const response = await fetch('http://localhost:8000/api/user/delete_account', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

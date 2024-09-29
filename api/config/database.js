@@ -10,7 +10,7 @@ const mongoURI = `mongodb://${dbUser}:${dbPassword}@${dbHost}:27017/${dbName}?au
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect(mongoURI);
     console.log('MongoDB connected');
 
     // Initialize GridFS

@@ -70,7 +70,7 @@ const error = ref('');
 const fetchUserProfile = async () => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch('http://localhost:8000/api/me', {
+    const response = await fetch('http://localhost:8000/api/profile/me', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
