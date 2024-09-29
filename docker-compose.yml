@@ -36,6 +36,13 @@ services:
       - frontend
     depends_on:
       - api
+
+  xmr_wallet:
+    build: xmr_wallet
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
 networks:
   frontend:
   backend:
