@@ -27,24 +27,7 @@ services:
       - mongo-data:/data/db
       - ./mongod.conf:/etc/mongod.conf  # Mount the custom configuration file
     command: mongod --config /etc/mongod.conf  # Use the custom configuration file
-
-  web:
-    build: web
-    ports:
-      - "5000:5000"
-    networks:
-      - frontend
-    depends_on:
-      - api
-
-  xmr_wallet:
-    build: xmr_wallet
-    ports:
-      - "18081:18081"
-      - "18082:18082"
-    networks:
-      - backend
-networks:
+    
   frontend:
   backend:
 
