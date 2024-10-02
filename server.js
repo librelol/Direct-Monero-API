@@ -45,6 +45,10 @@ app.get('/api', (req, res) => {
   res.json({ message: 'API is running' });
 });
 
+app.get('/', (req, res) => {
+  res.send('This is the API root. Please make sure you use /api to access the API.');
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`API is running on port ${PORT}`);
