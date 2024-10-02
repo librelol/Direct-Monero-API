@@ -73,4 +73,14 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Function to generate a random display name
+const generateRandomDisplayName = () => {
+  const adjectives = ['Brave', 'Clever', 'Witty', 'Bold', 'Swift'];
+  const nouns = ['Lion', 'Eagle', 'Shark', 'Panther', 'Wolf'];
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4 random numbers
+  return `${adjective}${noun}${crypto.randomBytes(2).toString('hex')}${randomNumbers}`;
+};
+
 module.exports = router;
