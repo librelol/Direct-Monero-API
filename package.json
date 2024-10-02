@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "vercel-start": "node server.js"
+    "build": "babel . --out-dir dist --ignore node_modules,dist"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +28,9 @@
     "validator": "^13.12.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.25.7",
+    "@babel/core": "^7.25.7",
+    "@babel/preset-env": "^7.25.7",
     "@types/bcrypt": "^5.0.2",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
