@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "babel . --out-dir dist --ignore node_modules,dist --output public",
+    "build": "babel . --out-dir dist --ignore node_modules,dist",
     "vercel-build": "npm run build"
   },
   "author": "",
