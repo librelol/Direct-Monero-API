@@ -1,6 +1,6 @@
 # Crypto Market
 
-Welcome to the Crypto Market project! This is to provide a open source example of how a crypto based online market would work.
+Welcome to the crypto market, originally designed as a example of how a darknet-like crypto powered store would work now it is being designed for crypto trading.
 
 ## Features
 

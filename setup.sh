@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Ensure the scripts are executable
-chmod +x ./utilies/generate_environment.sh
-chmod +x ./utilies/start.sh
+chmod +x ./utilities/genenv.sh
+chmod +x ./utilities/start.sh
 
 # Run the generate_environment.sh script
-./utilies/generate_environment.sh
-./utilies/start.sh
+./utilities/genenv.sh
+./utilities/start.sh

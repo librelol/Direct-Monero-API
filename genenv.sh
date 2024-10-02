@@ -1,5 +1,4 @@
 #!/bin/bash
-cd ..
 
 # Function to generate a random string of specified length
 generate_random_string() {
