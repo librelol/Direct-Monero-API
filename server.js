@@ -40,7 +40,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/post', postRoutes);
 
-// Debug route
+// Route to check if the api is working
 app.use('/api', (req, res) => {
   res.json({ message: 'API is running' });
 });
