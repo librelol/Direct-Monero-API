@@ -6,7 +6,7 @@ const dbPassword = process.env.DB_PASSWORD;
 const dbName = process.env.DB_NAME;
 const dbHost = process.env.DB_HOST;
 
-const mongoURI = `mongodb://${dbUser}:${dbPassword}@${dbHost}:27017/${dbName}?authSource=admin`;
+const mongoURI = `mongodb+srv://${dbUser}:${dbPassword}@${dbHost}/${dbName}?authSource=admin`;
 
 const connectDB = async () => {
   try {
