@@ -6,7 +6,7 @@ const dbPassword = process.env.DB_PASSWORD;
 const dbName = process.env.DB_NAME;
 const dbHost = process.env.DB_HOST;
 
-const mongoURI = `mongodb+srv://${dbUser}:${dbPassword}@${dbHost}/${dbName}?authSource=admin`;
+const mongoURI = process.env.MONGODB_URI || `mongodb+srv://${dbUser}:${dbPassword}@${dbHost}/${dbName}?retryWrites=true&w=majority`;
 
 const maxRetries = 5;
 const retryDelay = 30; // 5 seconds
