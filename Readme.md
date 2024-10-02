@@ -2,13 +2,17 @@
 
 Welcome to the crypto market, originally designed as a example of how a darknet-like crypto powered store would work now it is being designed for crypto trading.
 
-## Features
+## Setup
 
-TBA
+### Required environment variables
 
-## Installation
+```
+dbUser = PlaceDatabaseUsernameHere
+dbPassword = PlaceDatabasePasswordHere
+dbName = PlaceDatabaseNameHere
+dbHost = PlaceDatabaseHostHere
+```
 
-TBA
 
 ## Contributing
 
