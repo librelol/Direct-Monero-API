@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
+const crypto = require('crypto');
 const User = require('../models/user');
 const { loginLimiter } = require('../middleware/rateLimiter');
 const authenticateToken = require('../middleware/authenticateToken');
