@@ -41,7 +41,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/post', postRoutes);
 
 // Route to check if the api is working
-app.use('/api', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ message: 'API is running' });
 });
 
