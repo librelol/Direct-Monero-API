@@ -19,6 +19,8 @@ const PORT = process.env.PORT || 3000;
 // Connect to the database
 connectDB();
 
+app.set('trust proxy', 1); // Trust the first proxy
+
 // Middleware
 app.use(helmet());
 app.use(cors({

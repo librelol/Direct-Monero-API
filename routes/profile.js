@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt'); // Ensure bcrypt is imported
 const router = express.Router();
 
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
-router.get('/me', authenticateToken, apiLimiter, async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
