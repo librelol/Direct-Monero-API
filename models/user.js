@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   buyerReputation: { type: Number, default: 0 },
   sellerReputation: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
+  role: { type: String, default: 'user' } // Add role field
 });
 
 module.exports = mongoose.model('User', userSchema);
