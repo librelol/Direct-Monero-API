@@ -1,12 +1,9 @@
 const express = require('express');
-const cors = require('cors');
 const helmet = require('helmet');
+const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
-const verboseLogging = true; // Set to true to enable verbose logging
-
+const apiLimiter = require('./middleware/apiLimiter');
 const connectDB = require('./config/database');
-const { apiLimiter } = require('./middleware/rateLimiter');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const userRoutes = require('./routes/user');
@@ -19,6 +16,9 @@ const PORT = process.env.PORT || 3000;
 // Connect to the database
 connectDB();
 
+// Trust proxy settings
+app.set('trust proxy', 1); // Trust the first proxy
+
 // Middleware
 app.use(helmet());
 app.use(cors({
@@ -30,7 +30,7 @@ app.use(bodyParser.json());
 app.use(apiLimiter);
 
 // Verbose logging middleware
-if (verboseLogging) {
+if (process.env.VERBOSE_LOGGING === 'true') {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     console.log('Headers:', req.headers);
@@ -42,20 +42,10 @@ if (verboseLogging) {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/post', postRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 app.use('/api/admin', adminRoutes); // Use admin routes
 
-// Route to check if the api is working
-app.get('/api', (req, res) => {
-  res.json({ message: 'API is running' });
-});
-
-app.get('/', (req, res) => {
-  res.send('This is the API root. Please make sure you use /api to access the API.');
-});
-
-// Start the server
 app.listen(PORT, () => {
-  console.log(`API is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
