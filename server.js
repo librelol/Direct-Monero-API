@@ -20,12 +20,11 @@ connectDB();
 
 // Middleware
 app.use(helmet());
-// Configure CORS
-// const corsOptions = {
-//   origin: 'https://crypto-market-frontend.vercel.app', // Allow requests from this origin
-//   optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
-// };
-// app.use(cors(corsOptions));
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://crypto-market-frontend.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 app.use(apiLimiter);
 
