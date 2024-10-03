@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   displayName: { type: String, required: true },
   public_key: { type: String, required: false },
   isSeller: { type: Boolean, default: false },
-  buyerReputation: { type: Number, default: 0 },
+  User_Reputation: { type: Number, default: 0 },
   sellerReputation: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
   role: { type: String, default: 'user' } // Add role field

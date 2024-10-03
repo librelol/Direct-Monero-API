@@ -109,4 +109,38 @@ router.get('/my_posts', authenticateToken, async (req, res) => {
     }
 });
 
+// Endpoint to retrieve top posts
+router.get('/top-posts', authenticateToken, async (req, res) => {
+    try {
+      // Fetch all posts
+      const posts = await Post.find();
+  
+      // Fetch all users
+      const users = await User.find();
+  
+      // Create a map of userId to sellerReputation
+      const userReputationMap = users.reduce((map, user) => {
+        map[user._id] = user.sellerReputation;
+        return map;
+      }, {});
+  
+      // Combine post reputation and seller reputation
+      const combinedReputationPosts = posts.map(post => {
+        const sellerReputation = userReputationMap[post.authorId] || 0;
+        return {
+          ...post._doc,
+          combinedReputation: post.post_reputation + sellerReputation
+        };
+      });
+  
+      // Sort posts by combined reputation in descending order
+      combinedReputationPosts.sort((a, b) => b.combinedReputation - a.combinedReputation);
+  
+      // Return the sorted posts
+      res.json(combinedReputationPosts);
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
 module.exports = router;

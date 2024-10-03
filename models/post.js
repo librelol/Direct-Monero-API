@@ -30,9 +30,13 @@ const postSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    active: {
+    onSale: {
         type: Boolean,
         default: false
+    },
+    post_reputation: {
+        type: Number,
+        default: 0
     }
 });
 
