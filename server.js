@@ -22,7 +22,7 @@ connectDB();
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://crypto-market-frontend.vercel.app'],
+  origin: ['http://localhost:3000', 'https://crypto-market-frontend.vercel.app', 'https://www.directmonero.com', 'https://directmonero.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
