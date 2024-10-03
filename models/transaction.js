@@ -1,45 +1,32 @@
 const mongoose = require('mongoose');
 
-const postSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    productDescription: {
-        type: String,
-        required: false,
-    },
-    price: {
-        type: Number,
-        required: true
-    },
-    amountPerPrice: {
-        type: Number,
-        required: true
-    },
-    unitAmount: {
-        type: String,
-        required: true
-    },
-    authorId: {
-        type: String,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    onSale: {
-        type: Boolean,
-        default: false
-    },
-    post_reputation: {
-        type: Number,
-        default: 0
-    }
+const transactionSchema = new mongoose.Schema({
+  buyerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['initiated', 'completed', 'cancelled'],
+    default: 'initiated'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-const Post = mongoose.model('Post', postSchema);
+const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
 
-module.exports = Post;
+module.exports = Transaction;

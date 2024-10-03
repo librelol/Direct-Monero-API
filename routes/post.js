@@ -145,24 +145,25 @@ router.get('/top-posts', authenticateToken, async (req, res) => {
     }
   });
 
+
 // Endpoint to initiate a transaction
 router.post('/initiate-transaction', authenticateToken, async (req, res) => {
     const { sellerId, postId } = req.body;
     const buyerId = req.user.id; // Extract buyerId from the authenticated user's token
-  
+
     try {
-      const transaction = new Transaction({
-        buyerId,
-        sellerId,
-        postId
-      });
-  
-      await transaction.save();
-  
-      res.status(201).json(transaction);
+        const transaction = new Transaction({
+            buyerId,
+            sellerId,
+            postId
+        });
+
+        await transaction.save();
+
+        res.status(201).json(transaction);
     } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error' });
     }
-  });
+});
 
 module.exports = router;
