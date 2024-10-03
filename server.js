@@ -2,7 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const apiLimiter = require('./middleware/rateLimiter');
+const apiLimiter = require('./middleware/apiLimiter');
 const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
@@ -15,9 +15,6 @@ const PORT = process.env.PORT || 3000;
 
 // Connect to the database
 connectDB();
-
-// Trust proxy settings
-app.set('trust proxy', 1); // Trust the first proxy
 
 // Middleware
 app.use(helmet());
