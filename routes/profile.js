@@ -4,12 +4,15 @@ const User = require('../models/user');
 const { apiLimiter } = require('../middleware/rateLimiter');
 const bcrypt = require('bcrypt'); // Ensure bcrypt is imported
 const multer = require('multer'); // Import multer for file uploads
-const { GridFsStorage } = require('multer-gridfs-storage');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const path = require('path');
 
 const router = express.Router();
+
+// Configure multer storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
 router.get('/me', authenticateToken, apiLimiter, async (req, res) => {
@@ -96,24 +99,42 @@ router.post('/public_key', authenticateToken, async (req, res) => {
 });
 
 // Endpoint to set the profile image
-router.post('/profile_image', authenticateToken, global.upload.single('profileImage'), async (req, res) => {
+router.post('/profile_image', authenticateToken, upload.single('profileImage'), async (req, res) => {
   try {
     const user = await User.findById(req.user.id); // Fetch user by ID
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Create a new ProfileImage document
-    const profileImage = {
-      filename: req.file.filename,
-      user: user._id,
-    };
+    // Create a unique filename
+    crypto.randomBytes(16, (err, buf) => {
+      if (err) {
+        return res.status(500).send('Error generating filename.');
+      }
+      const filename = buf.toString('hex') + path.extname(req.file.originalname);
 
-    // Update the user's profileImageId
-    user.profileImageId = profileImage.filename;
-    await user.save(); // Save changes to the database
+      // Create a write stream to GridFS
+      const writeStream = global.gfs.createWriteStream({
+        filename: filename,
+        content_type: req.file.mimetype,
+      });
 
-    res.json({ message: 'Profile image updated successfully', profileImageUrl: `/api/profile/image/${profileImage.filename}` });
+      // Write the file buffer to GridFS
+      writeStream.write(req.file.buffer);
+      writeStream.end();
+
+      writeStream.on('close', async (file) => {
+        // Update the user's profileImageId
+        user.profileImageId = file.filename;
+        await user.save(); // Save changes to the database
+
+        res.json({ message: 'Profile image updated successfully', profileImageUrl: `/api/profile/image/${file.filename}` });
+      });
+
+      writeStream.on('error', (err) => {
+        res.status(500).send('Error uploading file.');
+      });
+    });
   } catch (error) {
     console.error('Error updating profile image:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -139,6 +160,5 @@ router.get('/image/:filename', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 
 module.exports = router;
