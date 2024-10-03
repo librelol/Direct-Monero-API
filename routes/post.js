@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user'); // Ensure User is properly imported
 const Post = require('../models/post'); // Ensure Post is properly imported
+const Transaction = require('../models/transaction');
+
 const authenticateToken = require('../middleware/authenticateToken'); // Ensure authenticateToken is properly imported
 const isSeller = require('../middleware/isSeller'); // Ensure isSeller is properly imported
 
@@ -138,6 +140,26 @@ router.get('/top-posts', authenticateToken, async (req, res) => {
   
       // Return the sorted posts
       res.json(combinedReputationPosts);
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+// Endpoint to initiate a transaction
+router.post('/initiate-transaction', authenticateToken, async (req, res) => {
+    const { sellerId, postId } = req.body;
+    const buyerId = req.user.id; // Extract buyerId from the authenticated user's token
+  
+    try {
+      const transaction = new Transaction({
+        buyerId,
+        sellerId,
+        postId
+      });
+  
+      await transaction.save();
+  
+      res.status(201).json(transaction);
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }
