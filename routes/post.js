@@ -4,25 +4,10 @@ const User = require('../models/user'); // Ensure User is properly imported
 const Post = require('../models/post'); // Ensure Post is properly imported
 const authenticateToken = require('../middleware/authenticateToken'); // Ensure authenticateToken is properly imported
 const isSeller = require('../middleware/isSeller'); // Ensure isSeller is properly imported
-const multer = require('multer'); // Import multer
-const path = require('path');
 
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Specify the destination directory for uploaded images
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`); // Specify the filename format
-    }
-});
-
-const upload = multer({ storage });
-
-// Create a new post with image upload
-router.post('/create_post', authenticateToken, isSeller, upload.single('image'), async (req, res) => {
+// Create a new post
+router.post('/create_post', authenticateToken, isSeller, async (req, res) => {
     const { title, productDescription, price, amountPerPrice, unitAmount, onSale } = req.body;
-    const imageUrl = req.file ? req.file.path : null; // Get the image path if an image is uploaded
 
     // Validate the input
     if (!title || !price || !amountPerPrice || !unitAmount) {
@@ -43,7 +28,6 @@ router.post('/create_post', authenticateToken, isSeller, upload.single('image'),
             amountPerPrice,
             unitAmount,
             authorId: user._id,
-            imageUrl,
             onSale
         });
 
@@ -56,10 +40,9 @@ router.post('/create_post', authenticateToken, isSeller, upload.single('image'),
     }
 });
 
-// Update an existing post with image upload
-router.put('/update_post/:id', authenticateToken, isSeller, upload.single('image'), async (req, res) => {
+// Update an existing post
+router.put('/update_post/:id', authenticateToken, isSeller, async (req, res) => {
     const { title, productDescription, price, amountPerPrice, unitAmount, onSale } = req.body;
-    const imageUrl = req.file ? req.file.path : null; // Get the image path if an image is uploaded
 
     // Validate the input
     if (!title || !price || !amountPerPrice || !unitAmount) {
@@ -83,7 +66,6 @@ router.put('/update_post/:id', authenticateToken, isSeller, upload.single('image
         post.price = price;
         post.amountPerPrice = amountPerPrice;
         post.unitAmount = unitAmount;
-        post.imageUrl = imageUrl || post.imageUrl; // Update the image URL if a new image is uploaded
         post.onSale = onSale;
 
         // Save the updated post to the database
@@ -112,6 +94,16 @@ router.delete('/delete_post/:id', authenticateToken, isSeller, async (req, res) 
         await post.remove();
 
         res.status(200).json({ message: 'Post deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Retrieve posts created by the authenticated user
+router.get('/my_posts', authenticateToken, async (req, res) => {
+    try {
+        const posts = await Post.find({ authorId: req.user.id });
+        res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
