@@ -11,7 +11,7 @@ const SECRET_KEY = process.env.SECRET_KEY || require('crypto').randomBytes(64).t
 const router = express.Router();
 
 // Login endpoint
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   // Sanitize inputs
