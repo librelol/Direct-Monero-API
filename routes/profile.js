@@ -115,6 +115,7 @@ router.post('/profile_image', authenticateToken, upload.single('profileImage'), 
 
       // Create a write stream to GridFS
       const writeStream = global.gfs.createWriteStream({
+        _id: new mongoose.Types.ObjectId(),
         filename: filename,
         content_type: req.file.mimetype,
       });
@@ -125,7 +126,7 @@ router.post('/profile_image', authenticateToken, upload.single('profileImage'), 
 
       writeStream.on('close', async (file) => {
         // Update the user's profileImageId
-        user.profileImageId = file.filename;
+        user.profileImageId = file._id;
         await user.save(); // Save changes to the database
 
         res.json({ message: 'Profile image updated successfully', profileImageUrl: `/api/profile/image/${file.filename}` });
