@@ -3,6 +3,11 @@ const authenticateToken = require('../middleware/authenticateToken');
 const User = require('../models/user');
 const { apiLimiter } = require('../middleware/rateLimiter');
 const bcrypt = require('bcrypt'); // Ensure bcrypt is imported
+const multer = require('multer'); // Import multer for file uploads
+const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+const path = require('path');
 
 const router = express.Router();
 
@@ -89,5 +94,51 @@ router.post('/public_key', authenticateToken, async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// Endpoint to set the profile image
+router.post('/profile_image', authenticateToken, global.upload.single('profileImage'), async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // Fetch user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create a new ProfileImage document
+    const profileImage = {
+      filename: req.file.filename,
+      user: user._id,
+    };
+
+    // Update the user's profileImageId
+    user.profileImageId = profileImage.filename;
+    await user.save(); // Save changes to the database
+
+    res.json({ message: 'Profile image updated successfully', profileImageUrl: `/api/profile/image/${profileImage.filename}` });
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Endpoint to get the profile image by filename
+router.get('/image/:filename', async (req, res) => {
+  try {
+    const conn = mongoose.connection;
+    const gfs = new mongoose.mongo.GridFSBucket(conn.db, {
+      bucketName: 'uploads',
+    });
+
+    const file = await gfs.find({ filename: req.params.filename }).toArray();
+    if (!file || file.length === 0) {
+      return res.status(404).json({ message: 'No file exists' });
+    }
+
+    gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+  } catch (error) {
+    console.error('Error fetching profile image:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 module.exports = router;

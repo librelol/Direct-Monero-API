@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const Grid = require('gridfs-stream');
+const { GridFsStorage } = require('multer-gridfs-storage');
+const crypto = require('crypto');
+const path = require('path');
 
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
@@ -24,6 +27,29 @@ const connectDB = async () => {
         global.gfs = Grid(conn.db, mongoose.mongo);
         global.gfs.collection('uploads'); // Set the collection name for GridFS
       });
+
+      // Configure GridFsStorage for multer
+      const storage = new GridFsStorage({
+        url: mongoURI,
+        file: (req, file) => {
+          return new Promise((resolve, reject) => {
+            crypto.randomBytes(16, (err, buf) => {
+              if (err) {
+                return reject(err);
+              }
+              const filename = buf.toString('hex') + path.extname(file.originalname);
+              const fileInfo = {
+                filename: filename,
+                bucketName: 'uploads',
+              };
+              resolve(fileInfo);
+            });
+          });
+        },
+      });
+
+      global.upload = require('multer')({ storage });
+
       return; // Exit the function if connection is successful
     } catch (err) {
       retries += 1;
