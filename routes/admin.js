@@ -26,4 +26,14 @@ router.put('/adjust_seller/:id', isAdmin, async (req, res) => {
   }
 });
 
+// Endpoint to list all users
+router.get('/users', isAdmin, async (req, res) => {
+  try {
+    const users = await User.find({}, '_id username name email isSeller'); // Adjust the fields as necessary
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
