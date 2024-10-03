@@ -1,8 +1,4 @@
 const mongoose = require('mongoose');
-const Grid = require('gridfs-stream');
-const multer = require('multer');
-const crypto = require('crypto');
-const path = require('path');
 
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
@@ -20,18 +16,6 @@ const connectDB = async () => {
     try {
       await mongoose.connect(mongoURI);
       console.log('MongoDB connected');
-
-      // Initialize GridFS
-      const conn = mongoose.createConnection(mongoURI);
-      conn.once('open', () => {
-        global.gfs = Grid(conn.db, mongoose.mongo);
-        global.gfs.collection('uploads'); // Set the collection name for GridFS
-
-        // Configure multer storage
-        const storage = multer.memoryStorage();
-        global.upload = multer({ storage });
-      });
-
       return; // Exit the function if connection is successful
     } catch (err) {
       retries += 1;

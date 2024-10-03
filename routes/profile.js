@@ -3,24 +3,20 @@ const authenticateToken = require('../middleware/authenticateToken');
 const User = require('../models/user');
 const { apiLimiter } = require('../middleware/rateLimiter');
 const bcrypt = require('bcrypt'); // Ensure bcrypt is imported
-const mongoose = require('mongoose');
-const crypto = require('crypto');
-const path = require('path');
 
 const router = express.Router();
 
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
 router.get('/me', authenticateToken, apiLimiter, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('profileImageId'); // Fetch user by ID and populate profile image ID
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     // Send back the username, public key, and display name
     res.json({ 
       public_key: user.public_key || null, // Return public_key, default to null if not set
-      displayName: user.displayName || null, // Return displayName, default to null if not set
-      profileImageId: user.profileImageId // Return profile image ID
+      displayName: user.displayName || null // Return displayName, default to null if not set
     });
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -91,79 +87,6 @@ router.post('/public_key', authenticateToken, async (req, res) => {
       console.error('Error updating public key:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
-});
-
-// Endpoint to set the profile image
-router.post('/profile_image', authenticateToken, (req, res, next) => {
-  if (!global.upload) {
-    return res.status(500).json({ message: 'File upload service not initialized' });
-  }
-  next();
-}, global.upload.single('profileImage'), async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id); // Fetch user by ID
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    // Create a unique filename
-    crypto.randomBytes(16, (err, buf) => {
-      if (err) {
-        return res.status(500).send('Error generating filename.');
-      }
-      const filename = buf.toString('hex') + path.extname(req.file.originalname);
-
-      // Create a write stream to GridFS
-      const writeStream = global.gfs.createWriteStream({
-        _id: new mongoose.Types.ObjectId(),
-        filename: filename,
-        content_type: req.file.mimetype,
-      });
-
-      // Write the file buffer to GridFS
-      writeStream.write(req.file.buffer);
-      writeStream.end();
-
-      writeStream.on('close', async (file) => {
-        // Update the user's profileImageId
-        user.profileImageId = file._id;
-        await user.save(); // Save changes to the database
-
-        res.json({ message: 'Profile image updated successfully', profileImageUrl: `/api/profile/image/${file.filename}` });
-      });
-
-      writeStream.on('error', (err) => {
-        res.status(500).send('Error uploading file.');
-      });
-    });
-  } catch (error) {
-    console.error('Error updating profile image:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Endpoint to get the profile image by filename
-router.get('/image/:filename', async (req, res) => {
-  try {
-    const conn = mongoose.connection;
-    const gfs = new mongoose.mongo.GridFSBucket(conn.db, {
-      bucketName: 'uploads',
-    });
-
-    const file = await gfs.find({ filename: req.params.filename }).toArray();
-    if (!file || file.length === 0) {
-      return res.status(404).json({ message: 'No file exists' });
-    }
-
-    gfs.openDownloadStreamByName(req.params.filename).pipe(res);
-  } catch (error) {
-    console.error('Error fetching profile image:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
 });
 
 module.exports = router;
