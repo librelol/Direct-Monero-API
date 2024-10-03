@@ -6,7 +6,7 @@ const authenticateToken = require('../middleware/authenticateToken'); // Ensure 
 const isSeller = require('../middleware/isSeller'); // Ensure isSeller is properly imported
 
 // Create a new post
-router.post('/create_post', authenticateToken, isSeller, async (req, res) => {
+router.post('/create_post', isSeller, async (req, res) => {
     const { title, productDescription, price, amountPerPrice, unitAmount, onSale } = req.body;
 
     // Validate the input
@@ -41,7 +41,7 @@ router.post('/create_post', authenticateToken, isSeller, async (req, res) => {
 });
 
 // Update an existing post
-router.put('/update_post/:id', authenticateToken, isSeller, async (req, res) => {
+router.put('/update_post/:id', isSeller, async (req, res) => {
     const { title, productDescription, price, amountPerPrice, unitAmount, onSale } = req.body;
 
     // Validate the input
@@ -78,7 +78,7 @@ router.put('/update_post/:id', authenticateToken, isSeller, async (req, res) => 
 });
 
 // Delete an existing post
-router.delete('/delete_post/:id', authenticateToken, isSeller, async (req, res) => {
+router.delete('/delete_post/:id', isSeller, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
