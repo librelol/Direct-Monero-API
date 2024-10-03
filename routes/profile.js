@@ -3,16 +3,11 @@ const authenticateToken = require('../middleware/authenticateToken');
 const User = require('../models/user');
 const { apiLimiter } = require('../middleware/rateLimiter');
 const bcrypt = require('bcrypt'); // Ensure bcrypt is imported
-const multer = require('multer'); // Import multer for file uploads
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const path = require('path');
 
 const router = express.Router();
-
-// Configure multer storage
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 // Endpoint to retrieve the current logged-in user's username, public key, and display name
 router.get('/me', authenticateToken, apiLimiter, async (req, res) => {
@@ -99,11 +94,20 @@ router.post('/public_key', authenticateToken, async (req, res) => {
 });
 
 // Endpoint to set the profile image
-router.post('/profile_image', authenticateToken, upload.single('profileImage'), async (req, res) => {
+router.post('/profile_image', authenticateToken, (req, res, next) => {
+  if (!global.upload) {
+    return res.status(500).json({ message: 'File upload service not initialized' });
+  }
+  next();
+}, global.upload.single('profileImage'), async (req, res) => {
   try {
     const user = await User.findById(req.user.id); // Fetch user by ID
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
     }
 
     // Create a unique filename

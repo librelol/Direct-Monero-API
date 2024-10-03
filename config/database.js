@@ -12,7 +12,7 @@ const dbHost = process.env.DB_HOST;
 const mongoURI = process.env.MONGODB_URI || `mongodb+srv://${dbUser}:${dbPassword}@${dbHost}/${dbName}?retryWrites=true&w=majority`;
 
 const maxRetries = 5;
-const retryDelay = 30; // 5 seconds
+const retryDelay = 5000; // 5 seconds
 
 const connectDB = async () => {
   let retries = 0;
@@ -26,11 +26,11 @@ const connectDB = async () => {
       conn.once('open', () => {
         global.gfs = Grid(conn.db, mongoose.mongo);
         global.gfs.collection('uploads'); // Set the collection name for GridFS
-      });
 
-      // Configure multer storage
-      const storage = multer.memoryStorage();
-      global.upload = multer({ storage });
+        // Configure multer storage
+        const storage = multer.memoryStorage();
+        global.upload = multer({ storage });
+      });
 
       return; // Exit the function if connection is successful
     } catch (err) {
