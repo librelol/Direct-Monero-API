@@ -15,6 +15,9 @@ const postRoutes = require('./routes/post');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Connect to the database
+connectDB();
+
 // Middleware
 app.use(helmet());
 app.use(cors({
@@ -35,28 +38,22 @@ if (verboseLogging) {
   });
 }
 
-// Connect to the database and initialize global.upload
-connectDB().then(() => {
-  // Routes
-  app.use('/api/auth', authRoutes);
-  app.use('/api/profile', profileRoutes);
-  app.use('/api/user', userRoutes);
-  app.use('/api/post', postRoutes);
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/post', postRoutes);
 
-  // Route to check if the api is working
-  app.get('/api', (req, res) => {
-    res.json({ message: 'API is running' });
-  });
+// Route to check if the api is working
+app.get('/api', (req, res) => {
+  res.json({ message: 'API is running' });
+});
 
-  app.get('/', (req, res) => {
-    res.send('This is the API root. Please make sure you use /api to access the API.');
-  });
+app.get('/', (req, res) => {
+  res.send('This is the API root. Please make sure you use /api to access the API.');
+});
 
-  // Start the server
-  app.listen(PORT, () => {
-    console.log(`API is running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Failed to connect to the database:', err);
-  process.exit(1);
+// Start the server
+app.listen(PORT, () => {
+  console.log(`API is running on port ${PORT}`);
 });

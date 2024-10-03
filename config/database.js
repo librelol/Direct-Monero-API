@@ -23,22 +23,16 @@ const connectDB = async () => {
 
       // Initialize GridFS
       const conn = mongoose.createConnection(mongoURI);
-      return new Promise((resolve, reject) => {
-        conn.once('open', () => {
-          global.gfs = Grid(conn.db, mongoose.mongo);
-          global.gfs.collection('uploads'); // Set the collection name for GridFS
+      conn.once('open', () => {
+        global.gfs = Grid(conn.db, mongoose.mongo);
+        global.gfs.collection('uploads'); // Set the collection name for GridFS
 
-          // Configure multer storage
-          const storage = multer.memoryStorage();
-          global.upload = multer({ storage });
-
-          resolve(); // Resolve the promise when initialization is complete
-        });
-
-        conn.on('error', (err) => {
-          reject(err); // Reject the promise if there is an error
-        });
+        // Configure multer storage
+        const storage = multer.memoryStorage();
+        global.upload = multer({ storage });
       });
+
+      return; // Exit the function if connection is successful
     } catch (err) {
       retries += 1;
       console.error(`MongoDB connection error (attempt ${retries}):`, err);
